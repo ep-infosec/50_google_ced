@@ -1,0 +1,137 @@
+// Copyright 2017 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+message TagSet { repeated string tags = 1; };
+
+message Diagnostic {
+  enum Severity {
+    UNSET = 0;
+    IGNORED = 1;
+    NOTE = 2;
+    WARNING = 3;
+    ERROR = 4;
+    FATAL = 5;
+  };
+  Severity severity = 1;
+  string message = 2;
+};
+
+message Fixit {
+  enum Type {
+    UNSET = 0;
+    AUTOSUGGEST = 1;
+    COMPILE_FIX = 2;
+    TIDY_FIX = 3;
+  };
+  Type type = 1;
+  uint64 diagnostic = 2;
+  string replacement = 3;
+};
+
+message SizeAnnotation {
+  enum Type {
+    UNSET = 0;
+    OFFSET_INTO_PARENT = 1;
+    SIZEOF_SELF = 2;
+  };
+  Type type = 1;
+  uint64 size = 2;
+  uint32 bits = 3;
+};
+
+message TopContext { repeated string lines = 1; };
+
+message BufferRef {
+  uint64 buffer = 1;
+  repeated int32 lines = 2;
+};
+
+message Cursor {};
+message Selection {};
+
+message BufferString {
+  string name = 1;
+  string contents = 2;
+};
+
+message Dependency { string filename = 1; };
+
+message Attribute {
+  oneof data {
+    TagSet tags = 1;
+    Diagnostic diagnostic = 2;
+    Fixit fixit = 3;
+    SizeAnnotation size = 4;
+    BufferRef buffer_ref = 5;
+    Cursor cursor = 6;
+    Selection selection = 7;
+    BufferString buffer = 8;
+    Dependency dependency = 9;
+    TopContext top_context = 10;
+  }
+};
+
+message Annotation {
+  uint64 begin = 1;
+  uint64 end = 2;
+  uint64 attribute = 3;
+};
+
+message InsertCommand {
+  uint64 after = 1;
+  uint64 before = 2;
+  string characters = 3;
+};
+
+message DeleteCommand {};
+
+message Command {
+  uint64 id = 1;
+  oneof command {
+    InsertCommand insert = 2;
+    DeleteCommand delete = 3;
+    Attribute decl = 4;
+    DeleteCommand del_decl = 5;
+    Annotation mark = 6;
+    DeleteCommand del_mark = 7;
+  };
+};
+
+message CommandSet { repeated Command commands = 1; };
+
+message AnnotatedStringMsg {
+  message CharInfo {
+    uint64 id = 1;
+    bool visible = 2;
+    int32 chr = 3;
+    uint64 next = 4;
+    uint64 prev = 5;
+    uint64 after = 6;
+    uint64 before = 7;
+  };
+  repeated CharInfo chars = 1;
+  message Attr {
+    uint64 id = 1;
+    Attribute attr = 2;
+  };
+  repeated Attr attributes = 2;
+  message Anno {
+    uint64 id = 1;
+    Annotation anno = 2;
+  };
+  repeated Anno annotations = 3;
+  repeated uint64 graveyard = 4;
+};

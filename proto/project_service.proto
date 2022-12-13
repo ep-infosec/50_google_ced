@@ -1,0 +1,48 @@
+// Copyright 2017 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+import "proto/annotation.proto";
+
+message EditMessage {
+  message ClientHello { string buffer_name = 1; };
+
+  message ServerHello {
+    uint32 site_id = 1;
+    AnnotatedStringMsg current_state = 2;
+  };
+
+  oneof type {
+    // first message, client -> server
+    ClientHello client_hello = 1;
+    // second message, server -> client
+    ServerHello server_hello = 2;
+    // after server_hello sent/received, these can be sent
+    // any time in either direction
+    CommandSet commands = 3;
+  };
+};
+
+message ConnectionHelloRequest {};
+message ConnectionHelloResponse { string src_hash = 1; };
+
+message Empty {};
+
+service ProjectService {
+  rpc ConnectionHello(ConnectionHelloRequest)
+      returns (ConnectionHelloResponse) {};
+  rpc Edit(stream EditMessage) returns (stream EditMessage) {};
+  rpc Quit(Empty) returns (Empty) {};
+};
